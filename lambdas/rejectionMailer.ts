@@ -13,12 +13,6 @@ if (!SES_EMAIL_TO || !SES_EMAIL_FROM || !SES_REGION) {
   );
 }
 
-type ContactDetails = {
-  name: string;
-  email: string;
-  message: string;
-};
-
 const client = new SESClient({ region: "eu-west-1" });
 
 export const handler: SQSHandler = async (event: any) => {
@@ -34,24 +28,19 @@ export const handler: SQSHandler = async (event: any) => {
         const srcBucket = s3e.bucket.name;
         // Object key may have spaces or unicode non-ASCII characters.
         const srcKey = decodeURIComponent(s3e.object.key.replace(/\+/g, " "));
+
         try {
-          const { name, email, message }: ContactDetails = {
-            name: "The Photo Album",
-            email: SES_EMAIL_FROM,
-            message: `We received your Image. Its URL is s3://${srcBucket}/${srcKey}`,
-          };
-          const params = sendEmailParams({ name, email, message });
-          await client.send(new SendEmailCommand(params));
+          const message = `The image you sent is not in the correct format! Its URL is s3://${srcBucket}/${srcKey}`;
+          await sendEmailParams(message);
         } catch (error: unknown) {
-          console.log("ERROR is: ", error);
-          // return;
+        console.log("ERROR is: ", error);
         }
       }
     }
   }
 };
 
-function sendEmailParams({ name, email, message }: ContactDetails) {
+async function sendEmailParams(message: string) {
   const parameters: SendEmailCommandInput = {
     Destination: {
       ToAddresses: [SES_EMAIL_TO],
@@ -60,44 +49,25 @@ function sendEmailParams({ name, email, message }: ContactDetails) {
       Body: {
         Html: {
           Charset: "UTF-8",
-          Data: getHtmlContent({ name, email, message }),
+          Data: getHtmlContent(message),
         },
-        // Text: {
-        //   Charset: "UTF-8",
-        //   Data: getTextContent({ name, email, message }),
-        // },
       },
       Subject: {
         Charset: "UTF-8",
-        Data: `New image Upload`,
+        Data: `Image Upload Rejected`,
       },
     },
     Source: SES_EMAIL_FROM,
   };
-  return parameters;
+  await client.send(new SendEmailCommand(parameters));
 }
 
-function getHtmlContent({ name, email, message }: ContactDetails) {
+function getHtmlContent(message: string) {
   return `
     <html>
       <body>
-        <h2>Sent from: </h2>
-        <ul>
-          <li style="font-size:18px">👤 <b>${name}</b></li>
-          <li style="font-size:18px">✉️ <b>${email}</b></li>
-        </ul>
         <p style="font-size:18px">${message}</p>
       </body>
     </html> 
-  `;
-}
-
-function getTextContent({ name, email, message }: ContactDetails) {
-  return `
-    Received an Email. 📬
-    Sent from:
-        👤 ${name}
-        ✉️ ${email}
-    ${message}
   `;
 }
