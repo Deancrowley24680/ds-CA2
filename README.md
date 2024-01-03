@@ -1,15 +1,13 @@
-## EDA Assignment - Distributed Systems.
+EDA Assignment - Distributed Systems.
+Name: Dean Crowley
 
-__Name:__ Dean Crowley
+Student Number: 20089889
 
-__Student Number:__ 20089889
-
-__YouTube Demo link__ - [https://youtu.be/q2xjA09J9vk]
+YouTube Demo link - [https://youtu.be/q2xjA09J9vk]
 
 [ Note: The video must include an audio.]
 
-### Phase 1.
-
+Phase 1.
 [ List the Lambda functions in this phase's architecture and state their working status.]
 
 + Confirmation Mailer - Partially implemented.
